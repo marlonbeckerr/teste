@@ -72,6 +72,7 @@
     .form-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
     .form-control { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background-color: #0f172a; color: var(--text-main); font-size: 14px; }
     .btn-submit { width: 100%; padding: 12px; background-color: var(--accent-gold); color: #000; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; }
+    .btn-danger { width: 100%; padding: 12px; background-color: #ef4444; color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 15px; }
 
     .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 8px; background-color: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); max-height: 200px; overflow-y: auto; }
     .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
@@ -341,7 +342,6 @@
 </head>
 <body>
 
-  <!-- TOAST CONTAINER (NOTIFICAÇÃO VISÍVEL NA TELA) -->
   <div id="toastContainer"></div>
 
   <div id="loginOverlay">
@@ -406,7 +406,6 @@
       <div id="currentUserTag" class="user-tag">👤 Não identificado</div>
 
       <div style="display: flex; align-items: center; gap: 12px;">
-        <!-- ÍCONE DE NOTIFICAÇÕES -->
         <div class="notification-wrapper">
           <button class="notification-btn" onclick="toggleNotifications()">
             🔔
@@ -455,7 +454,6 @@
         <div id="destaqueArea" style="display: none;">
           <div style="text-align: center; font-size: 13px; color: var(--text-muted); margin-bottom: 12px;" id="lastMatchHeader">Resumo da Última Partida</div>
 
-          <!-- CARD DO CRAQUE (MVP) -->
           <div class="mvp-card-glow">
             <div class="mvp-badge">👑 Craque da Rodada</div>
             <br>
@@ -465,7 +463,6 @@
             <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Maior Nota na Última Partida</div>
           </div>
 
-          <!-- CAMPO TÁTICO DOS PARTICIPANTES -->
           <div class="section-title" style="text-align: center;">🌱 Jogadores em Campo</div>
           <div class="pitch-container" id="pitchPlayersList"></div>
         </div>
@@ -621,6 +618,10 @@
         <p style="margin-bottom: 12px; font-size: 13px; color: var(--text-muted);" id="evalMatchHeaderInfo"></p>
         <div id="evalList"></div>
         <button class="btn-submit" onclick="saveMatchData()">Enviar Minhas Notas</button>
+      </div>
+
+      <div style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+        <button class="btn-danger" onclick="resetAllData()">🧹 Limpar Todos os Dados da Rodada</button>
       </div>
     </div>
 
@@ -831,7 +832,6 @@
         titleBadge.style.display = 'none';
       }
 
-      // Preenche select de títulos conquistados
       const earnedTitles = getEarnedTitles(user);
       const titleSelect = document.getElementById('updateTitle');
       const container = document.getElementById('titleSelectContainer');
@@ -1034,13 +1034,11 @@
       const goalsInput = document.querySelector(`.eval-goals-input[data-player="${currentUser.id}"]`);
       const myGoalsInMatch = goalsInput ? parseInt(goalsInput.value) || 0 : 0;
 
-      // Atualiza gols e jogos do usuário
       db.ref(`players/${currentUser.id}`).update({
         goals: (currentUser.goals || 0) + myGoalsInMatch,
         matches: (currentUser.matches || 0) + 1
       });
 
-      // Salva avaliações recebidas pelos outros
       const ratingSelects = document.querySelectorAll('.eval-rating-select');
       ratingSelects.forEach(select => {
         const targetId = select.dataset.player;
@@ -1057,11 +1055,31 @@
         }
       });
 
-      // Marca avaliação do usuário
       db.ref(`matches/${matchId}/evaluations/${currentUser.id}`).set(true).then(() => {
         alert('Notas enviadas com sucesso!');
         document.getElementById('evalListArea').style.display = 'none';
       });
+    }
+
+    /* BOTAO PARA ZERAR TODOS OS DADOS DA RODADA */
+    function resetAllData() {
+      const confirmation = confirm("Tem certeza de que deseja ZERAR todos os dados da rodada?\n\nIsso apagará todas as partidas e resetará os gols, partidas e notas de TODOS os jogadores.");
+      
+      if (!confirmation) return;
+
+      // Reset de partidas
+      db.ref('matches').remove();
+
+      // Reset de estatísticas de cada jogador
+      players.forEach(p => {
+        db.ref(`players/${p.id}`).update({
+          goals: 0,
+          matches: 0,
+          ratings: null
+        });
+      });
+
+      alert("Dados zerados com sucesso!");
     }
 
     function renderDestaqueTab() {
@@ -1163,7 +1181,6 @@
       `).join('');
     }
 
-    /* REGRAS DE CONQUISTA DE TÍTULOS */
     function getEarnedTitles(player) {
       if (!player) return [];
       const earned = ['bem_vindo'];
