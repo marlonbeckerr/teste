@@ -709,44 +709,52 @@
       }
     }
 
-    function handleLogin() {
-      const matInput = document.getElementById('loginMatricula').value.trim();
-      const mat = parseInt(matInput);
+    function loginWithMatricula() {
+  const input = document.getElementById('loginMatriculaInput');
+  const val = input ? input.value.trim() : '';
 
-      if (!matInput || isNaN(mat) || mat < 14000 || mat > 30000) {
-        return alert('Digite uma matrícula válida entre 14000 e 30000!');
-      }
+  if (!val) {
+    return alert('Por favor, digite sua matrícula.');
+  }
 
-      const existingUser = players.find(p => p.matricula == mat);
+  // Acesso visitante
+  if (val === '0') {
+    loggedUserMatricula = '0';
+    document.getElementById('loginModal').style.display = 'none';
+    initApp();
+    return;
+  }
 
-      if (existingUser) {
-        loggedUserMatricula = mat;
-        localStorage.setItem('fut_user_matricula', mat);
-        checkSession();
-      } else {
-        const name = document.getElementById('loginName').value.trim();
-        if (!name) return alert('Como esta é sua primeira vez, informe seu nome!');
+  const num = parseInt(val);
+  if (isNaN(num) || num < 14000 || num > 30000) {
+    return alert('Matrícula inválida! Digite um número entre 14000 e 30000.');
+  }
 
-        const newId = Date.now().toString();
-        db.ref('players/' + newId).set({
-          matricula: mat,
-          name: name,
-          position: 'Atacante',
-          matches: 0,
-          goals: 0,
-          concededGoals: 0,
-          ratings: [],
-          equippedTitle: '',
-          photo: defaultAvatar
-        }).then(() => {
-          loggedUserMatricula = mat;
-          localStorage.setItem('fut_user_matricula', mat);
-          document.getElementById('loginName').value = '';
-          document.getElementById('loginMatricula').value = '';
-          checkSession();
-        });
-      }
+  // Busca no Firebase Realtime Database
+  db.ref('players').once('value').then(snapshot => {
+    const data = snapshot.val();
+    let found = false;
+
+    if (data) {
+      Object.keys(data).forEach(key => {
+        if (data[key].matricula == val) {
+          found = true;
+        }
+      });
     }
+
+    if (found) {
+      loggedUserMatricula = val;
+      document.getElementById('loginModal').style.display = 'none';
+      initApp();
+    } else {
+      alert('Matrícula não encontrada no sistema. Cadastre-se ou verifique o número.');
+    }
+  }).catch(err => {
+    console.error('Erro ao conectar com Firebase:', err);
+    alert('Erro ao validar matrícula. Verifique sua conexão com o banco.');
+  });
+}
 
     function logout() {
       localStorage.removeItem('fut_user_matricula');
