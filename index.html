@@ -351,7 +351,7 @@
 
       <div class="form-group">
         <label>Sua Matrícula (5 dígitos):</label>
-        <input type="number" id="loginMatricula" class="form-control" placeholder="Ex: 14500" >
+        <input type="text" id="loginMatricula" class="form-control" placeholder="Ex: 14500" oninput="checkMatriculaStatus()">
       </div>
 
       <div id="firstAccessGroup" style="display: none;" class="form-group">
@@ -689,7 +689,11 @@
     }
 
     function checkMatriculaStatus() {
-      const mat = parseInt(document.getElementById('loginMatricula').value);
+      const input = document.getElementById('loginMatricula');
+      if (!input) return;
+      input.value = input.value.replace(/\D/g, '').slice(0, 5);
+
+      const mat = parseInt(input.value);
       const firstAccessGroup = document.getElementById('firstAccessGroup');
       const btn = document.getElementById('btnLoginAction');
 
@@ -708,268 +712,196 @@
         btn.innerText = `Entrar como ${existingUser.name}`;
       }
     }
-function checkMatriculaStatus() {
-  // Função auxiliar para evitar erro de execução no evento oninput
-  const input = document.getElementById('loginMatriculaInput');
-  if (!input) return;
-}
-    // 1. Função que o HTML chama quando você digita no input (oninput)
-function checkMatriculaStatus() {
-  const input = document.getElementById('loginMatricula') || document.getElementById('loginMatriculaInput');
-  if (!input) return;
-  // Limpa letras e deixa só números
-  input.value = input.value.replace(/\D/g, '').slice(0, 5);
-}
 
-// 2. Função principal de Login
-function loginWithMatricula() {
-  // Pega o input com o nome antigo ou o novo
-  const input = document.getElementById('loginMatricula') || document.getElementById('loginMatriculaInput');
-  const val = input ? input.value.trim() : '';
+    function handleLogin() {
+      const matInput = document.getElementById('loginMatricula').value.trim();
+      const mat = parseInt(matInput);
 
-  if (!val) {
-    return alert('Por favor, digite sua matrícula.');
-  }
+      if (isNaN(mat) || mat < 14000 || mat > 30000) {
+        return alert('Digite uma matrícula válida entre 14000 e 30000!');
+      }
 
-  // Acesso Visitante
-  if (val === '0') {
-    loggedUserMatricula = '0';
-    esconderTelasDeLogin();
-    if (typeof initApp === 'function') initApp();
-    return;
-  }
+      const existingUser = players.find(p => p.matricula == mat);
 
-  // Validação do intervalo
-  const num = parseInt(val);
-  if (isNaN(num) || num < 14000 || num > 30000) {
-    return alert('Matrícula inválida! Digite um número entre 14000 e 30000.');
-  }
-
-  // Consulta no Firebase Realtime Database
-  if (typeof db === 'undefined' || !db) {
-    return alert('Erro: Conexão com o Firebase não foi inicializada no HTML.');
-  }
-
-  db.ref('players').once('value').then(snapshot => {
-    const data = snapshot.val();
-    let userFound = false;
-
-    if (data) {
-      Object.keys(data).forEach(key => {
-        if (data[key] && data[key].matricula == val) {
-          userFound = true;
-        }
-      });
-    }
-
-    if (userFound) {
-      loggedUserMatricula = val;
-      localStorage.setItem('fut_user_matricula', val);
-      
-      esconderTelasDeLogin();
-
-      if (typeof fetchPlayers === 'function') fetchPlayers();
-      if (typeof fetchMatches === 'function') fetchMatches();
-      if (typeof initApp === 'function') initApp();
-    } else {
-      alert('Matrícula não encontrada no sistema. Verifique o número digitado.');
-    }
-  }).catch(err => {
-    console.error('Erro ao conectar com o banco:', err);
-    alert('Erro ao validar matrícula. Verifique a conexão com o Firebase.');
-  });
-}
-
-// 3. Função auxiliar para sumir com o modal/overlay de login não importa o nome que ele tenha no HTML
-function esconderTelasDeLogin() {
-  ['loginModal', 'loginOverlay', 'modalLogin'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
-  });
-}
-
-// 4. Logout correto
-function logout() {
-  localStorage.removeItem('fut_user_matricula');
-  loggedUserMatricula = null;
-  
-  const input = document.getElementById('loginMatricula') || document.getElementById('loginMatriculaInput');
-  if (input) input.value = '';
-
-  const firstAccess = document.getElementById('firstAccessGroup');
-  if (firstAccess) firstAccess.style.display = 'none';
-
-  const overlay = document.getElementById('loginOverlay') || document.getElementById('loginModal');
-  if (overlay) overlay.style.display = 'flex';
-}
-
-    function toggleNotifications() {
-      const dropdown = document.getElementById('notifDropdown');
-      const badge = document.getElementById('notifBadge');
-
-      if (dropdown.style.display === 'block') {
-        dropdown.style.display = 'none';
+      if (existingUser) {
+        loggedUserMatricula = mat;
+        localStorage.setItem('fut_user_matricula', mat);
+        checkSession();
       } else {
-        dropdown.style.display = 'block';
-        unreadCount = 0;
-        badge.style.display = 'none';
+        const nameInput = document.getElementById('loginName').value.trim();
+        if (!nameInput) {
+          return alert('Para o primeiro acesso, informe o seu nome!');
+        }
+
+        const newPlayer = {
+          matricula: mat,
+          name: nameInput,
+          position: 'Atacante',
+          matches: 0,
+          goals: 0,
+          ratings: [],
+          photo: defaultAvatar,
+          equippedTitle: ''
+        };
+
+        db.ref('players').push(newPlayer).then(() => {
+          loggedUserMatricula = mat;
+          localStorage.setItem('fut_user_matricula', mat);
+          checkSession();
+        });
       }
     }
 
-    function clearNotifications() {
-      const list = document.getElementById('notifList');
-      list.innerHTML = '<div class="notification-item" style="color:var(--text-muted); text-align:center;">Nenhuma notificação nova.</div>';
-      document.getElementById('notifBadge').style.display = 'none';
-      unreadCount = 0;
+    function logout() {
+      localStorage.removeItem('fut_user_matricula');
+      loggedUserMatricula = null;
+      document.getElementById('loginMatricula').value = '';
+      document.getElementById('loginName').value = '';
+      document.getElementById('firstAccessGroup').style.display = 'none';
+      document.getElementById('loginOverlay').style.display = 'flex';
     }
 
-    function showToast(title, bodyText) {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = 'toast-popup';
-      toast.innerHTML = `
-        <div style="font-size:24px;">🎉</div>
-        <div>
-          <div style="font-weight:bold; font-size:13px; color:var(--accent-gold);">${title}</div>
-          <div style="font-size:12px;">${bodyText}</div>
-        </div>
-      `;
-      container.appendChild(toast);
-
-      setTimeout(() => {
-        toast.style.animation = 'slideIn 0.4s ease-out reverse forwards';
-        setTimeout(() => toast.remove(), 400);
-      }, 4500);
-    }
-
-    // Fechar dropdown de notificações ao clicar fora
-    document.addEventListener('click', (e) => {
-      const wrapper = document.querySelector('.notification-wrapper');
-      if (wrapper && !wrapper.contains(e.target)) {
-        document.getElementById('notifDropdown').style.display = 'none';
-      }
-    });
-
-    function switchTab(tabId, evt) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById('tab-' + tabId).classList.add('active');
-      if(evt) evt.target.classList.add('active');
+    function calcAvg(ratings) {
+      if (!ratings || ratings.length === 0) return 3.0;
+      const sum = ratings.reduce((a, b) => a + b, 0);
+      return parseFloat((sum / ratings.length).toFixed(1));
     }
 
     function renderRanking() {
       const tbody = document.getElementById('rankingTableBody');
       const emptyMsg = document.getElementById('emptyRankingMsg');
-      tbody.innerHTML = '';
 
       if (players.length === 0) {
+        tbody.innerHTML = '';
         emptyMsg.style.display = 'block';
         return;
       }
+
       emptyMsg.style.display = 'none';
 
-      const sorted = [...players].sort((a, b) => (b.goals || 0) - (a.goals || 0));
-
-      sorted.forEach((p, index) => {
-        const avg = calcAvg(p.ratings).toFixed(1);
-        const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
-        const titleBadgeHTML = p.equippedTitle && titleLabels[p.equippedTitle] 
-          ? `<div style="font-size:10px; color:var(--accent-gold); font-weight:bold;">${titleLabels[p.equippedTitle]}</div>` 
-          : '';
-
-        const tr = document.createElement('tr');
-        tr.className = 'clickable-row';
-        tr.onclick = () => openVisitorModal(p.id);
-        tr.innerHTML = `
-          <td><span class="badge-rank ${rankClass}">${index + 1}</span></td>
-          <td>
-            <div class="player-cell">
-              <img class="avatar-mini" src="${p.photo || defaultAvatar}">
-              <div>
-                <div>${p.name}</div>
-                ${titleBadgeHTML}
-                <div style="font-size:10px; color:var(--text-muted)">${p.position || 'Jogador'}</div>
-              </div>
-            </div>
-          </td>
-          <td>${p.matches || 0}</td>
-          <td><strong>${p.goals || 0}</strong></td>
-          <td><span class="stars">★ ${avg}</span></td>
-        `;
-        tbody.appendChild(tr);
+      const sorted = [...players].sort((a, b) => {
+        const avgA = calcAvg(a.ratings);
+        const avgB = calcAvg(b.ratings);
+        if (avgB !== avgA) return avgB - avgA;
+        return (b.goals || 0) - (a.goals || 0);
       });
-    }
 
-    function renderDestaqueTab() {
-      const emptyMsg = document.getElementById('emptyMatchDestaqueMsg');
-      const area = document.getElementById('destaqueArea');
-      const pitchContainer = document.getElementById('pitchPlayersList');
+      tbody.innerHTML = sorted.map((p, index) => {
+        let badgeClass = 'badge-rank';
+        if (index === 0) badgeClass += ' rank-1';
+        else if (index === 1) badgeClass += ' rank-2';
+        else if (index === 2) badgeClass += ' rank-3';
 
-      if (!matches || matches.length === 0) {
-        emptyMsg.style.display = 'block';
-        area.style.display = 'none';
-        return;
-      }
-
-      emptyMsg.style.display = 'none';
-      area.style.display = 'block';
-
-      const lastMatch = [...matches].sort((a, b) => b.id - a.id)[0];
-      const formattedDate = lastMatch.date.split('-').reverse().join('/');
-      document.getElementById('lastMatchHeader').innerText = `Última Partida em ${formattedDate} (${lastMatch.location})`;
-
-      const matchPlayers = players.filter(p => lastMatch.playerIds && lastMatch.playerIds.includes(p.id));
-
-      if (matchPlayers.length === 0) {
-        pitchContainer.innerHTML = '<div class="empty-msg">Nenhum jogador registrado nesta partida.</div>';
-        return;
-      }
-
-      let mvpPlayer = matchPlayers[0];
-      let maxScore = calcAvg(mvpPlayer.ratings);
-
-      matchPlayers.forEach(p => {
         const avg = calcAvg(p.ratings);
-        if (avg > maxScore) {
-          maxScore = avg;
-          mvpPlayer = p;
-        }
-      });
+        const titleBadge = p.equippedTitle ? `<span style="font-size:10px; color:var(--accent-gold);">[${p.equippedTitle}]</span>` : '';
 
-      document.getElementById('mvpPhoto').src = mvpPlayer.photo || defaultAvatar;
-      document.getElementById('mvpName').innerText = mvpPlayer.name;
-      document.getElementById('mvpScore').innerText = `★ ${maxScore.toFixed(1)}`;
-
-      pitchContainer.innerHTML = '';
-      matchPlayers.forEach(p => {
-        const score = calcAvg(p.ratings).toFixed(1);
-        pitchContainer.innerHTML += `
-          <div class="pitch-player">
-            <img class="pitch-avatar" src="${p.photo || defaultAvatar}">
-            <div class="pitch-name">${p.name}</div>
-            <div class="pitch-score">★ ${score}</div>
-          </div>
+        return `
+          <tr class="clickable-row" onclick="openProfileModal('${p.id}')">
+            <td><span class="${badgeClass}">${index + 1}</span></td>
+            <td>
+              <div class="player-cell">
+                <img class="avatar-mini" src="${p.photo || defaultAvatar}">
+                <div>
+                  <div>${p.name} ${titleBadge}</div>
+                  <div style="font-size:11px; color:var(--text-muted);">${p.position || 'Não def.'}</div>
+                </div>
+              </div>
+            </td>
+            <td>${p.matches || 0}</td>
+            <td>${p.goals || 0}</td>
+            <td><span class="stars">★ ${avg.toFixed(1)}</span></td>
+          </tr>
         `;
+      }).join('');
+    }
+
+    function loadMyProfile(user) {
+      document.getElementById('myName').innerText = user.name;
+      document.getElementById('myMatricula').innerText = `Matrícula: ${user.matricula}`;
+      document.getElementById('myPhoto').src = user.photo || defaultAvatar;
+      document.getElementById('myPositionBadge').innerText = `Posição: ${user.position || 'Não def.'}`;
+      document.getElementById('myMatches').innerText = user.matches || 0;
+      document.getElementById('myGoals').innerText = user.goals || 0;
+
+      const titleBadge = document.getElementById('myTitleBadge');
+      if (user.equippedTitle) {
+        titleBadge.innerText = user.equippedTitle;
+        titleBadge.style.display = 'inline-block';
+      } else {
+        titleBadge.style.display = 'none';
+      }
+
+      // Preenche select de títulos conquistados
+      const earnedTitles = getEarnedTitles(user);
+      const titleSelect = document.getElementById('updateTitle');
+      const container = document.getElementById('titleSelectContainer');
+
+      if (earnedTitles.length > 0) {
+        container.style.display = 'block';
+        titleSelect.innerHTML = '<option value="">Nenhum Título Equipado</option>' +
+          earnedTitles.map(t => {
+            const label = titleLabels[t] || t;
+            return `<option value="${label}" ${user.equippedTitle === label ? 'selected' : ''}>${label}</option>`;
+          }).join('');
+      } else {
+        container.style.display = 'none';
+      }
+    }
+
+    function savePosition() {
+      if (!loggedUserMatricula) return;
+      const currentUser = players.find(p => p.matricula == loggedUserMatricula);
+      if (!currentUser) return;
+
+      const pos = document.getElementById('updatePosition').value;
+      db.ref(`players/${currentUser.id}`).update({ position: pos }).then(() => {
+        alert('Posição atualizada com sucesso!');
       });
     }
 
-    function openVisitorModal(playerId) {
-      const p = players.find(x => x.id === playerId);
+    function saveNewPhoto() {
+      if (!loggedUserMatricula) return;
+      const currentUser = players.find(p => p.matricula == loggedUserMatricula);
+      if (!currentUser) return;
+
+      const fileInput = document.getElementById('updatePhoto');
+      if (fileInput.files.length === 0) return alert('Selecione uma imagem!');
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        db.ref(`players/${currentUser.id}`).update({ photo: e.target.result }).then(() => {
+          alert('Foto de perfil atualizada!');
+        });
+      };
+      reader.readAsDataURL(fileInput.files[0]);
+    }
+
+    function equipTitle() {
+      if (!loggedUserMatricula) return;
+      const currentUser = players.find(p => p.matricula == loggedUserMatricula);
+      if (!currentUser) return;
+
+      const title = document.getElementById('updateTitle').value;
+      db.ref(`players/${currentUser.id}`).update({ equippedTitle: title });
+    }
+
+    function openProfileModal(id) {
+      const p = players.find(player => player.id === id);
       if (!p) return;
 
       document.getElementById('modalPhoto').src = p.photo || defaultAvatar;
       document.getElementById('modalName').innerText = p.name;
-      document.getElementById('modalPosition').innerText = `Posição: ${p.position || 'Não informada'}`;
+      document.getElementById('modalPosition').innerText = p.position || 'Não definida';
       document.getElementById('modalMatches').innerText = p.matches || 0;
       document.getElementById('modalGoals').innerText = p.goals || 0;
       document.getElementById('modalRating').innerText = `★ ${calcAvg(p.ratings).toFixed(1)}`;
 
-      const titleBadge = document.getElementById('modalTitleBadge');
-      if (p.equippedTitle && titleLabels[p.equippedTitle]) {
-        titleBadge.innerText = titleLabels[p.equippedTitle];
-        titleBadge.style.display = 'inline-block';
+      const badge = document.getElementById('modalTitleBadge');
+      if (p.equippedTitle) {
+        badge.innerText = p.equippedTitle;
+        badge.style.display = 'inline-block';
       } else {
-        titleBadge.style.display = 'none';
+        badge.style.display = 'none';
       }
 
       document.getElementById('profileModal').style.display = 'flex';
@@ -980,490 +912,353 @@ function logout() {
     }
 
     function renderPlayersCheckboxes() {
-      const box = document.getElementById('playersCheckboxList');
-      box.innerHTML = '';
-      if(players.length === 0) {
-        box.innerHTML = '<span style="color:var(--text-muted); font-size:12px">Nenhum jogador cadastrado ainda.</span>';
-        return;
-      }
-      players.forEach(p => {
-        box.innerHTML += `
-          <label class="checkbox-item">
-            <input type="checkbox" class="chk-player" value="${p.id}"> ${p.name}
-          </label>
-        `;
-      });
-    }
-
-    function populateGkSelects() {
-      const gk1 = document.getElementById('gk1Select');
-      const gk2 = document.getElementById('gk2Select');
-      const current1 = gk1.value;
-      const current2 = gk2.value;
-
-      let optionsHTML = '<option value="">Sem goleiro fixo</option>';
-      players.forEach(p => {
-        const posText = p.position ? ` (${p.position})` : '';
-        optionsHTML += `<option value="${p.id}">${p.name}${posText}</option>`;
-      });
-
-      gk1.innerHTML = optionsHTML;
-      gk2.innerHTML = optionsHTML;
-
-      gk1.value = current1;
-      gk2.value = current2;
+      const container = document.getElementById('playersCheckboxList');
+      container.innerHTML = players.map(p => `
+        <label class="checkbox-item">
+          <input type="checkbox" value="${p.id}" class="match-player-cb">
+          ${p.name}
+        </label>
+      `).join('');
     }
 
     function renderDrawPlayersCheckboxes() {
-      const box = document.getElementById('drawPlayersCheckboxList');
-      box.innerHTML = '';
-      if(players.length === 0) {
-        box.innerHTML = '<span style="color:var(--text-muted); font-size:12px">Nenhum jogador cadastrado ainda.</span>';
-        return;
-      }
-      players.forEach(p => {
-        const avg = calcAvg(p.ratings).toFixed(1);
-        box.innerHTML += `
-          <label class="checkbox-item">
-            <input type="checkbox" class="chk-draw-player" value="${p.id}"> ${p.name} (★${avg})
-          </label>
-        `;
+      const container = document.getElementById('drawPlayersCheckboxList');
+      const linePlayers = players.filter(p => p.position !== 'Goleiro');
+      container.innerHTML = linePlayers.map(p => `
+        <label class="checkbox-item">
+          <input type="checkbox" value="${p.id}" class="draw-player-cb">
+          ${p.name}
+        </label>
+      `).join('');
+    }
+
+    function populateGkSelects() {
+      const gks = players.filter(p => p.position === 'Goleiro');
+      const options = '<option value="">Sem goleiro fixo</option>' + gks.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+      document.getElementById('gk1Select').innerHTML = options;
+      document.getElementById('gk2Select').innerHTML = options;
+    }
+
+    function createNewMatch() {
+      const date = document.getElementById('matchDateInput').value;
+      const location = document.getElementById('matchLocationInput').value;
+      const selected = Array.from(document.querySelectorAll('.match-player-cb:checked')).map(cb => cb.value);
+
+      if (!date || !location) return alert('Preencha a data e o local da partida!');
+      if (selected.length < 2) return alert('Selecione pelo menos 2 jogadores presentes!');
+
+      const newMatch = {
+        date,
+        location,
+        participants: selected,
+        evaluations: {}
+      };
+
+      db.ref('matches').push(newMatch).then(() => {
+        alert('Partida criada com sucesso!');
+        switchTab('avaliar-partida');
       });
     }
 
+    function populateMatchesDropdown() {
+      const select = document.getElementById('matchSelect');
+      select.innerHTML = '<option value="">Selecione a partida...</option>' + matches.map(m => `
+        <option value="${m.id}">${m.date} - ${m.location}</option>
+      `).join('');
+    }
+
+    function renderEvalArea() {
+      const matchId = document.getElementById('matchSelect').value;
+      const area = document.getElementById('evalListArea');
+      if (!matchId) { area.style.display = 'none'; return; }
+
+      const match = matches.find(m => m.id === matchId);
+      if (!match) return;
+
+      document.getElementById('evalMatchHeaderInfo').innerText = `Avaliando partida do dia ${match.date} em ${match.location}`;
+      const list = document.getElementById('evalList');
+
+      const currentUser = players.find(p => p.matricula == loggedUserMatricula);
+      if (!currentUser) return alert('Faça login para avaliar!');
+
+      list.innerHTML = match.participants.map(pId => {
+        const p = players.find(pl => pl.id === pId);
+        if (!p) return '';
+
+        const isSelf = p.id === currentUser.id;
+
+        return `
+          <div class="eval-row">
+            <div class="eval-row-header">
+              <img class="avatar-mini" src="${p.photo || defaultAvatar}">
+              <span>${p.name} ${isSelf ? '(Você)' : ''}</span>
+            </div>
+            <div class="eval-inputs">
+              ${isSelf ? `
+                <div>
+                  <label style="font-size:11px; color:var(--text-muted);">Gols que você fez:</label>
+                  <input type="number" min="0" value="0" class="form-control eval-goals-input" data-player="${p.id}">
+                </div>
+              ` : `
+                <div>
+                  <label style="font-size:11px; color:var(--text-muted);">Sua nota para ele:</label>
+                  <select class="form-control eval-rating-select" data-player="${p.id}">
+                    <option value="5">5.0 - Excelente</option>
+                    <option value="4">4.0 - Bom</option>
+                    <option value="3" selected>3.0 - Regular</option>
+                    <option value="2">2.0 - Ruim</option>
+                    <option value="1">1.0 - Péssimo</option>
+                  </select>
+                </div>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      area.style.display = 'block';
+    }
+
+    function saveMatchData() {
+      const matchId = document.getElementById('matchSelect').value;
+      if (!matchId) return;
+
+      const currentUser = players.find(p => p.matricula == loggedUserMatricula);
+      if (!currentUser) return;
+
+      const match = matches.find(m => m.id === matchId);
+      if (match.evaluations && match.evaluations[currentUser.id]) {
+        return alert('Você já enviou suas avaliações para esta partida!');
+      }
+
+      const goalsInput = document.querySelector(`.eval-goals-input[data-player="${currentUser.id}"]`);
+      const myGoalsInMatch = goalsInput ? parseInt(goalsInput.value) || 0 : 0;
+
+      // Atualiza gols e jogos do usuário
+      db.ref(`players/${currentUser.id}`).update({
+        goals: (currentUser.goals || 0) + myGoalsInMatch,
+        matches: (currentUser.matches || 0) + 1
+      });
+
+      // Salva avaliações recebidas pelos outros
+      const ratingSelects = document.querySelectorAll('.eval-rating-select');
+      ratingSelects.forEach(select => {
+        const targetId = select.dataset.player;
+        const ratingVal = parseFloat(select.value);
+
+        const targetPlayer = players.find(p => p.id === targetId);
+        if (targetPlayer) {
+          const currentRatings = targetPlayer.ratings || [];
+          currentRatings.push(ratingVal);
+          db.ref(`players/${targetId}`).update({
+            ratings: currentRatings,
+            matches: (targetPlayer.matches || 0) + 1
+          });
+        }
+      });
+
+      // Marca avaliação do usuário
+      db.ref(`matches/${matchId}/evaluations/${currentUser.id}`).set(true).then(() => {
+        alert('Notas enviadas com sucesso!');
+        document.getElementById('evalListArea').style.display = 'none';
+      });
+    }
+
+    function renderDestaqueTab() {
+      const emptyMsg = document.getElementById('emptyMatchDestaqueMsg');
+      const area = document.getElementById('destaqueArea');
+
+      if (matches.length === 0) {
+        emptyMsg.style.display = 'block';
+        area.style.display = 'none';
+        return;
+      }
+
+      emptyMsg.style.display = 'none';
+      area.style.display = 'block';
+
+      const lastMatch = matches[matches.length - 1];
+      document.getElementById('lastMatchHeader').innerText = `Partida de ${lastMatch.date} em ${lastMatch.location}`;
+
+      const participants = lastMatch.participants.map(id => players.find(p => p.id === id)).filter(Boolean);
+
+      if (participants.length > 0) {
+        const mvp = [...participants].sort((a, b) => calcAvg(b.ratings) - calcAvg(a.ratings))[0];
+        document.getElementById('mvpPhoto').src = mvp.photo || defaultAvatar;
+        document.getElementById('mvpName').innerText = mvp.name;
+        document.getElementById('mvpScore').innerText = `★ ${calcAvg(mvp.ratings).toFixed(1)}`;
+
+        document.getElementById('pitchPlayersList').innerHTML = participants.map(p => `
+          <div class="pitch-player">
+            <img class="pitch-avatar" src="${p.photo || defaultAvatar}">
+            <div class="pitch-name">${p.name}</div>
+            <div class="pitch-score">★ ${calcAvg(p.ratings).toFixed(1)}</div>
+          </div>
+        `).join('');
+      }
+    }
+
     function drawTeams() {
+      const selectedIds = Array.from(document.querySelectorAll('.draw-player-cb:checked')).map(cb => cb.value);
       const gk1Id = document.getElementById('gk1Select').value;
       const gk2Id = document.getElementById('gk2Select').value;
-      const drawMode = document.getElementById('drawModeSelect').value;
-      const teamSize = parseInt(document.getElementById('playersPerTeamInput').value) || 5;
+      const mode = document.getElementById('drawModeSelect').value;
+      const perTeam = parseInt(document.getElementById('playersPerTeamInput').value) || 5;
 
-      const checkedBoxes = document.querySelectorAll('.chk-draw-player:checked');
-      const selectedFieldIds = Array.from(checkedBoxes).map(cb => cb.value);
+      let selectedPlayers = selectedIds.map(id => players.find(p => p.id === id)).filter(Boolean);
 
-      if (gk1Id && selectedFieldIds.includes(gk1Id)) {
-        return alert('O goleiro do Time 1 não pode estar marcado nos jogadores de campo!');
+      if (mode === 'balanced') {
+        selectedPlayers.sort((a, b) => calcAvg(b.ratings) - calcAvg(a.ratings));
+      } else {
+        selectedPlayers.sort(() => Math.random() - 0.5);
       }
-      if (gk2Id && selectedFieldIds.includes(gk2Id)) {
-        return alert('O goleiro do Time 2 não pode estar marcado nos jogadores de campo!');
-      }
-      if (gk1Id && gk2Id && gk1Id === gk2Id) {
-        return alert('Selecione goleiros diferentes para cada time!');
-      }
-
-      if (selectedFieldIds.length < 2) {
-        return alert('Selecione pelo menos 2 jogadores de linha!');
-      }
-
-      let fieldPlayers = players.filter(p => selectedFieldIds.includes(p.id));
 
       const team1 = [];
       const team2 = [];
       const bench = [];
 
       if (gk1Id) {
-        const gk1Obj = players.find(p => p.id === gk1Id);
-        if (gk1Obj) team1.push({ ...gk1Obj, isGK: true });
+        const gk1 = players.find(p => p.id === gk1Id);
+        if (gk1) team1.push({ ...gk1, isGk: true });
       }
       if (gk2Id) {
-        const gk2Obj = players.find(p => p.id === gk2Id);
-        if (gk2Obj) team2.push({ ...gk2Obj, isGK: true });
+        const gk2 = players.find(p => p.id === gk2Id);
+        if (gk2) team2.push({ ...gk2, isGk: true });
       }
 
-      if (drawMode === 'random') {
-        for (let i = fieldPlayers.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [fieldPlayers[i], fieldPlayers[j]] = [fieldPlayers[j], fieldPlayers[i]];
+      selectedPlayers.forEach((p, idx) => {
+        if (team1.length < perTeam && (idx % 2 === 0 || team2.length >= perTeam)) {
+          team1.push(p);
+        } else if (team2.length < perTeam) {
+          team2.push(p);
+        } else {
+          bench.push(p);
         }
-        fieldPlayers.forEach(p => {
-          if (team1.filter(x => !x.isGK).length < teamSize) {
-            team1.push(p);
-          } else if (team2.filter(x => !x.isGK).length < teamSize) {
-            team2.push(p);
-          } else {
-            bench.push(p);
-          }
-        });
-      } else {
-        fieldPlayers.sort((a, b) => calcAvg(b.ratings) - calcAvg(a.ratings));
+      });
 
-        fieldPlayers.forEach((p, idx) => {
-          const t1FieldCount = team1.filter(x => !x.isGK).length;
-          const t2FieldCount = team2.filter(x => !x.isGK).length;
+      renderTeamList('team1List', team1);
+      renderTeamList('team2List', team2);
+      renderTeamList('benchList', bench);
 
-          if (t1FieldCount >= teamSize && t2FieldCount >= teamSize) {
-            bench.push(p);
-          } else if (t1FieldCount >= teamSize) {
-            team2.push(p);
-          } else if (t2FieldCount >= teamSize) {
-            team1.push(p);
-          } else {
-            if (Math.floor(idx / 2) % 2 === 0) {
-              if (idx % 2 === 0) team1.push(p); else team2.push(p);
-            } else {
-              if (idx % 2 === 0) team2.push(p); else team1.push(p);
-            }
-          }
-        });
-      }
+      document.getElementById('t1AvgDisplay').innerText = `Média: ★ ${calcTeamAvg(team1)}`;
+      document.getElementById('t2AvgDisplay').innerText = `Média: ★ ${calcTeamAvg(team2)}`;
 
-      renderTeamResult('team1List', 't1AvgDisplay', team1);
-      renderTeamResult('team2List', 't2AvgDisplay', team2);
-
-      const benchArea = document.getElementById('benchArea');
-      const benchList = document.getElementById('benchList');
-      benchList.innerHTML = '';
-
-      if (bench.length > 0) {
-        benchArea.style.display = 'block';
-        bench.forEach(p => {
-          const avg = calcAvg(p.ratings).toFixed(1);
-          benchList.innerHTML += `<li><img class="avatar-mini" src="${p.photo || defaultAvatar}"> ${p.name} (★${avg})</li>`;
-        });
-      } else {
-        benchArea.style.display = 'none';
-      }
-
+      document.getElementById('benchArea').style.display = bench.length > 0 ? 'block' : 'none';
       document.getElementById('drawResultArea').style.display = 'block';
     }
 
-    function renderTeamResult(elementId, avgId, teamArray) {
-      const ul = document.getElementById(elementId);
-      const avgSpan = document.getElementById(avgId);
-      ul.innerHTML = '';
-
-      let totalRating = 0;
-      teamArray.forEach(p => {
-        const avg = calcAvg(p.ratings);
-        totalRating += avg;
-        const gkBadge = p.isGK ? '<span class="gk-badge">GOLEIRO</span>' : '';
-        ul.innerHTML += `<li><img class="avatar-mini" src="${p.photo || defaultAvatar}"> ${p.name} (★${avg.toFixed(1)}) ${gkBadge}</li>`;
-      });
-
-      const teamAvg = teamArray.length > 0 ? (totalRating / teamArray.length).toFixed(1) : "0.0";
-      avgSpan.innerText = `Média Geral do Time: ★ ${teamAvg}`;
+    function calcTeamAvg(team) {
+      if (team.length === 0) return '0.0';
+      const sum = team.reduce((a, b) => a + calcAvg(b.ratings), 0);
+      return (sum / team.length).toFixed(1);
     }
 
-    function populateMatchesDropdown() {
-      const select = document.getElementById('matchSelect');
-      select.innerHTML = '<option value="">Selecione uma partida...</option>';
-      matches.forEach(m => {
-        const formattedDate = m.date.split('-').reverse().join('/');
-        select.innerHTML += `<option value="${m.id}">${formattedDate} - ${m.location}</option>`;
-      });
-    }
-
-    function loadMyProfile(player) {
-      if(!player) return;
-      document.getElementById('myName').innerText = player.name;
-      document.getElementById('myMatricula').innerText = `Matrícula: ${player.matricula}`;
-      document.getElementById('myPositionBadge').innerText = `Posição: ${player.position || 'Não informada'}`;
-      document.getElementById('myMatches').innerText = player.matches || 0;
-      document.getElementById('myGoals').innerText = player.goals || 0;
-      document.getElementById('myPhoto').src = player.photo || defaultAvatar;
-
-      if(player.position) {
-        document.getElementById('updatePosition').value = player.position;
-      }
-
-      const myBadge = document.getElementById('myTitleBadge');
-      if (player.equippedTitle && titleLabels[player.equippedTitle]) {
-        myBadge.innerText = titleLabels[player.equippedTitle];
-        myBadge.style.display = 'inline-block';
-      } else {
-        myBadge.style.display = 'none';
-      }
-
-      const earnedKeys = getEarnedTitles(player);
-      const titleContainer = document.getElementById('titleSelectContainer');
-      const titleSelect = document.getElementById('updateTitle');
-
-      if (earnedKeys.length > 0) {
-        titleContainer.style.display = 'block';
-        titleSelect.innerHTML = '<option value="">Nenhum Título Equipado</option>';
-        earnedKeys.forEach(key => {
-          if (titleLabels[key]) {
-            titleSelect.innerHTML += `<option value="${key}">${titleLabels[key]}</option>`;
-          }
-        });
-        titleSelect.value = player.equippedTitle || '';
-      } else {
-        titleContainer.style.display = 'none';
-      }
-    }
-
-    function equipTitle() {
-      const currentUser = players.find(p => p.matricula == loggedUserMatricula);
-      if (!currentUser) return;
-
-      const newTitle = document.getElementById('updateTitle').value;
-      db.ref('players/' + currentUser.id).update({ equippedTitle: newTitle })
-        .then(() => alert('Título atualizado com sucesso!'))
-        .catch(err => alert('Erro ao mudar título: ' + err.message));
-    }
-
-    function savePosition() {
-      const currentUser = players.find(p => p.matricula == loggedUserMatricula);
-      if(!currentUser) return;
-
-      const newPos = document.getElementById('updatePosition').value;
-      db.ref('players/' + currentUser.id).update({ position: newPos })
-        .then(() => alert('Posição atualizada com sucesso!'))
-        .catch(err => alert('Erro ao salvar posição: ' + err.message));
-    }
-
-    function saveNewPhoto() {
-      const currentUser = players.find(p => p.matricula == loggedUserMatricula);
-      if(!currentUser) return;
-
-      const fileInput = document.getElementById('updatePhoto');
-      const btn = document.getElementById('btnSavePhoto');
-
-      if (fileInput.files && fileInput.files[0]) {
-        btn.innerText = "Processando foto...";
-        btn.disabled = true;
-
-        const file = fileInput.files[0];
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-          const img = new Image();
-          img.src = e.target.result;
-          
-          img.onload = function() {
-            const canvas = document.createElement('canvas');
-            const maxDim = 250;
-            let width = img.width;
-            let height = img.height;
-
-            if (width > height) {
-              if (width > maxDim) {
-                height *= maxDim / width;
-                width = maxDim;
-              }
-            } else {
-              if (height > maxDim) {
-                width *= maxDim / height;
-                height = maxDim;
-              }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-
-            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-
-            db.ref('players/' + currentUser.id).update({ photo: compressedBase64 })
-              .then(() => {
-                alert('Foto alterada com sucesso!');
-                fileInput.value = '';
-                btn.innerText = "Salvar Nova Foto";
-                btn.disabled = false;
-              })
-              .catch((err) => {
-                alert('Erro ao salvar no banco: ' + err.message);
-                btn.innerText = "Salvar Nova Foto";
-                btn.disabled = false;
-              });
-          };
-        };
-
-        reader.readAsDataURL(file);
-      } else {
-        alert('Escolha uma imagem primeiro!');
-      }
-    }
-
-    function createNewMatch() {
-      const date = document.getElementById('matchDateInput').value;
-      const location = document.getElementById('matchLocationInput').value.trim();
-      const checkedBoxes = document.querySelectorAll('.chk-player:checked');
-
-      if (!date || !location) return alert('Informe a data e o local da partida!');
-      if (checkedBoxes.length === 0) return alert('Selecione os jogadores presentes!');
-
-      const selectedPlayerIds = Array.from(checkedBoxes).map(cb => cb.value);
-
-      const matchId = Date.now().toString();
-      db.ref('matches/' + matchId).set({
-        date: date,
-        location: location,
-        playerIds: selectedPlayerIds
-      }).then(() => {
-        selectedPlayerIds.forEach(pId => {
-          const p = players.find(x => x.id == pId);
-          if (p) db.ref('players/' + pId).update({ matches: (p.matches || 0) + 1 });
-        });
-
-        alert('Partida criada!');
-        document.getElementById('matchDateInput').value = '';
-        document.getElementById('matchLocationInput').value = '';
-        document.querySelectorAll('.chk-player').forEach(cb => cb.checked = false);
-      });
-    }
-
-    function renderEvalArea() {
-  const matchId = document.getElementById('matchSelect').value;
-  const area = document.getElementById('evalListArea');
-  const list = document.getElementById('evalList');
-
-  if (loggedUserMatricula === '0') {
-    area.style.display = 'none';
-    return alert('Visitantes não podem avaliar partidas.');
-  }
-
-  const currentUser = players.find(p => p.matricula == loggedUserMatricula);
-
-  if (!matchId || !currentUser) {
-    area.style.display = 'none';
-    return;
-  }
-
-  const match = matches.find(m => m.id == matchId);
-  if (!match) return;
-
-  area.style.display = 'block';
-  const formattedDate = match.date.split('-').reverse().join('/');
-  document.getElementById('evalMatchHeaderInfo').innerText = `Avaliando a partida em ${formattedDate} (${match.location}):`;
-
-  // Trava de avaliação única: verifica se o usuário já avaliou esta partida
-  if (match.evaluations && match.evaluations[currentUser.id]) {
-    list.innerHTML = `
-      <div class="empty-msg" style="color: var(--accent-gold); font-weight: bold; padding: 15px;">
-        ✅ Você já enviou sua avaliação para esta partida. Não é possível avaliar mais de uma vez.
-      </div>`;
-    document.getElementById('btnSaveEval').style.display = 'none';
-    return;
-  }
-
-  document.getElementById('btnSaveEval').style.display = 'block';
-  list.innerHTML = '';
-
-  // Campo próprio para o usuário registrar seus próprios gols
-  const selfRow = document.createElement('div');
-  selfRow.className = 'eval-row';
-  selfRow.style.border = '1px solid var(--accent-gold)';
-  selfRow.style.background = 'rgba(255, 215, 0, 0.05)';
-  selfRow.innerHTML = `
-    <div class="eval-row-header">
-      <img class="avatar-mini" src="${currentUser.photo || defaultAvatar}">
-      <span><strong>Seu Desempenho (${currentUser.name})</strong></span>
-    </div>
-    <div class="eval-inputs" style="margin-top:8px;">
-      <div style="width:100%;">
-        <label style="font-size:12px; color:var(--accent-gold); font-weight:bold;">Quantos gols você fez nesta partida?</label>
-        <input type="number" id="mySelfGoalsInput" class="form-control" value="0" min="0">
-      </div>
-    </div>
-  `;
-  list.appendChild(selfRow);
-
-  // Lista dos outros jogadores da partida (apenas nota de 1 a 5 estrelas)
-  const otherPlayers = players.filter(p => match.playerIds.includes(p.id) && p.id != currentUser.id);
-
-  if (otherPlayers.length > 0) {
-    const titleDiv = document.createElement('div');
-    titleDiv.style.margin = '15px 0 8px 0';
-    titleDiv.style.fontSize = '12px';
-    titleDiv.style.color = 'var(--text-muted)';
-    titleDiv.innerText = 'Avalie o desempenho dos seus companheiros:';
-    list.appendChild(titleDiv);
-
-    otherPlayers.forEach(p => {
-      const isGk = p.position === 'Goleiro';
-      const concededInput = isGk ? `
-        <div style="margin-top:6px;">
-          <label style="font-size:11px; color:var(--text-muted)">Gols Sofridos (Goleiro):</label>
-          <input type="number" class="form-control eval-conceded" data-id="${p.id}" value="0" min="0">
-        </div>
-      ` : '';
-
-      const row = document.createElement('div');
-      row.className = 'eval-row';
-      row.innerHTML = `
-        <div class="eval-row-header">
+    function renderTeamList(elementId, team) {
+      document.getElementById(elementId).innerHTML = team.map(p => `
+        <li>
           <img class="avatar-mini" src="${p.photo || defaultAvatar}">
-          <span>${p.name}</span>
-        </div>
-        <div class="eval-inputs">
-          <div style="width:100%;">
-            <label style="font-size:11px; color:var(--text-muted)">Nota do Jogador (1-5★):</label>
-            <select class="form-control eval-rating" data-id="${p.id}">
-              <option value="5">★ 5.0</option>
-              <option value="4">★ 4.0</option>
-              <option value="3" selected>★ 3.0</option>
-              <option value="2">★ 2.0</option>
-              <option value="1">★ 1.0</option>
-            </select>
-          </div>
-        </div>
-        ${concededInput}
-      `;
-      list.appendChild(row);
-    });
-  }
-}
-
-    function saveMatchData() {
-  if (loggedUserMatricula === '0') {
-    return alert('Visitantes não podem enviar avaliações!');
-  }
-
-  const matchId = document.getElementById('matchSelect').value;
-  const currentUser = players.find(p => p.matricula == loggedUserMatricula);
-
-  if (!matchId || !currentUser) return;
-
-  const match = matches.find(m => m.id == matchId);
-  if (!match) return;
-
-  if (match.evaluations && match.evaluations[currentUser.id]) {
-    return alert('Você já enviou sua avaliação para esta partida!');
-  }
-
-  // 1. Salva os gols autodeclarados do próprio usuário
-  const selfGoalsInput = document.getElementById('mySelfGoalsInput');
-  const myGoals = parseInt(selfGoalsInput ? selfGoalsInput.value : 0) || 0;
-  if (myGoals > 0) {
-    db.ref('players/' + currentUser.id).update({
-      goals: (currentUser.goals || 0) + myGoals
-    });
-  }
-
-  // 2. Salva as notas dadas aos companheiros
-  const ratingsInputs = document.querySelectorAll('.eval-rating');
-  const concededInputs = document.querySelectorAll('.eval-conceded');
-
-  ratingsInputs.forEach(input => {
-    const targetId = input.getAttribute('data-id');
-    const ratingVal = parseFloat(input.value);
-
-    const concededInput = Array.from(concededInputs).find(c => c.getAttribute('data-id') === targetId);
-    const addConceded = parseInt(concededInput ? concededInput.value : 0) || 0;
-
-    const targetPlayer = players.find(p => p.id == targetId);
-    if (targetPlayer) {
-      const updatedRatings = targetPlayer.ratings ? [...targetPlayer.ratings, ratingVal] : [ratingVal];
-      db.ref('players/' + targetId).update({
-        concededGoals: (targetPlayer.concededGoals || 0) + addConceded,
-        ratings: updatedRatings
-      });
+          ${p.name}
+          ${p.isGk ? '<span class="gk-badge">GOL</span>' : ''}
+        </li>
+      `).join('');
     }
-  });
 
-  // 3. Marca no Firebase que este usuário já avaliou esta partida
-  db.ref(`matches/${matchId}/evaluations/${currentUser.id}`).set(true)
-    .then(() => {
-      alert('Sua avaliação e seus gols foram salvos com sucesso!');
-      document.getElementById('matchSelect').value = '';
-      renderEvalArea();
-    });
-}
+    /* REGRAS DE CONQUISTA DE TÍTULOS */
+    function getEarnedTitles(player) {
+      if (!player) return [];
+      const earned = ['bem_vindo'];
 
-      alert('Sua avaliação foi enviada!');
-      document.getElementById('matchSelect').value = '';
-      renderEvalArea();
+      const matchesCount = player.matches || 0;
+      const goalsCount = player.goals || 0;
+      const avgRating = calcAvg(player.ratings);
+
+      if (goalsCount === 1) earned.push('artilheiro_acidental');
+      if (goalsCount === 3) earned.push('hat_trick');
+      if (goalsCount >= 10) earned.push('fominha');
+      if (goalsCount >= 20) earned.push('goat');
+      if (avgRating >= 4.5) earned.push('compliance');
+
+      return earned;
+    }
+
+    const titleLabels = {
+      'bem_vindo': '🟢 Bem vindo ao clube',
+      'artilheiro_acidental': '🎯 Artilheiro acidental',
+      'hat_trick': '🎩 Hat-trick',
+      'fominha': '⚽ Fominha',
+      'goat': '👑 GOAT',
+      'compliance': '📋 Aprovado pelo compliance'
+    };
+
+    function checkTitleNotifications(user) {
+      if (!user) return;
+      const currentTitles = getEarnedTitles(user);
+      const storageKey = `seen_titles_${user.matricula}`;
+      const seenTitles = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const newTitles = currentTitles.filter(t => !seenTitles.includes(t));
+
+      if (newTitles.length > 0) {
+        newTitles.forEach(tKey => {
+          const titleName = titleLabels[tKey] || tKey;
+          addNotificationToUI(`🎉 Você conquistou o título <strong>"${titleName}"</strong>!`);
+          showToast(`🏆 Novo Título!`, `Você desbloqueou "${titleName}"`);
+        });
+        localStorage.setItem(storageKey, JSON.stringify(currentTitles));
+      }
+    }
+
+    function addNotificationToUI(text) {
+      const list = document.getElementById('notifList');
+      const badge = document.getElementById('notifBadge');
+
+      if (list.children.length === 1 && list.children[0].innerText.includes('Nenhuma')) {
+        list.innerHTML = '';
+      }
+
+      const item = document.createElement('div');
+      item.className = 'notification-item';
+      item.innerHTML = text;
+      list.prepend(item);
+
+      const count = parseInt(badge.innerText || '0') + 1;
+      badge.innerText = count;
+      badge.style.display = 'flex';
+    }
+
+    function toggleNotifications() {
+      const dropdown = document.getElementById('notifDropdown');
+      dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+      document.getElementById('notifBadge').style.display = 'none';
+      document.getElementById('notifBadge').innerText = '0';
+    }
+
+    function clearNotifications() {
+      document.getElementById('notifList').innerHTML = '<div class="notification-item" style="color:var(--text-muted); text-align:center;">Nenhuma notificação nova.</div>';
+      document.getElementById('notifBadge').style.display = 'none';
+      document.getElementById('notifBadge').innerText = '0';
+    }
+
+    function showToast(title, msg) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast-popup';
+      toast.innerHTML = `
+        <div style="font-size:20px;">🏆</div>
+        <div>
+          <div style="font-weight:800; font-size:13px; color:var(--accent-gold);">${title}</div>
+          <div style="font-size:12px;">${msg}</div>
+        </div>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    function switchTab(tabId, event) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+      if (event && event.target) event.target.classList.add('active');
     }
   </script>
 </body>
