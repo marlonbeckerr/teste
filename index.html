@@ -1381,96 +1381,162 @@
     }
 
     function renderEvalArea() {
-      const matchId = document.getElementById('matchSelect').value;
-      const area = document.getElementById('evalListArea');
-      const list = document.getElementById('evalList');
+  const matchId = document.getElementById('matchSelect').value;
+  const area = document.getElementById('evalListArea');
+  const list = document.getElementById('evalList');
 
-      const currentUser = players.find(p => p.matricula == loggedUserMatricula);
+  if (loggedUserMatricula === '0') {
+    area.style.display = 'none';
+    return alert('Visitantes não podem avaliar partidas.');
+  }
 
-      if (!matchId || !currentUser) {
-        area.style.display = 'none';
-        return;
-      }
+  const currentUser = players.find(p => p.matricula == loggedUserMatricula);
 
-      const match = matches.find(m => m.id == matchId);
-      if(!match) return;
+  if (!matchId || !currentUser) {
+    area.style.display = 'none';
+    return;
+  }
 
-      area.style.display = 'block';
-      const formattedDate = match.date.split('-').reverse().join('/');
-      document.getElementById('evalMatchHeaderInfo').innerText = `Avaliando a partida em ${formattedDate} (${match.location}):`;
+  const match = matches.find(m => m.id == matchId);
+  if (!match) return;
 
-      list.innerHTML = '';
-      
-      const matchPlayers = players.filter(p => match.playerIds.includes(p.id) && p.id != currentUser.id);
+  area.style.display = 'block';
+  const formattedDate = match.date.split('-').reverse().join('/');
+  document.getElementById('evalMatchHeaderInfo').innerText = `Avaliando a partida em ${formattedDate} (${match.location}):`;
 
-      if (matchPlayers.length === 0) {
-        list.innerHTML = '<div class="empty-msg">Você foi o único desta partida ou não há outros para avaliar.</div>';
-        return;
-      }
+  // Trava de avaliação única: verifica se o usuário já avaliou esta partida
+  if (match.evaluations && match.evaluations[currentUser.id]) {
+    list.innerHTML = `
+      <div class="empty-msg" style="color: var(--accent-gold); font-weight: bold; padding: 15px;">
+        ✅ Você já enviou sua avaliação para esta partida. Não é possível avaliar mais de uma vez.
+      </div>`;
+    document.getElementById('btnSaveEval').style.display = 'none';
+    return;
+  }
 
-      matchPlayers.forEach(p => {
-        const isGk = p.position === 'Goleiro';
-        const concededInput = isGk ? `
-          <div style="margin-top:6px;">
-            <label style="font-size:11px; color:var(--text-muted)">Gols Sofridos (Goleiro):</label>
-            <input type="number" class="form-control eval-conceded" data-id="${p.id}" value="0" min="0">
+  document.getElementById('btnSaveEval').style.display = 'block';
+  list.innerHTML = '';
+
+  // Campo próprio para o usuário registrar seus próprios gols
+  const selfRow = document.createElement('div');
+  selfRow.className = 'eval-row';
+  selfRow.style.border = '1px solid var(--accent-gold)';
+  selfRow.style.background = 'rgba(255, 215, 0, 0.05)';
+  selfRow.innerHTML = `
+    <div class="eval-row-header">
+      <img class="avatar-mini" src="${currentUser.photo || defaultAvatar}">
+      <span><strong>Seu Desempenho (${currentUser.name})</strong></span>
+    </div>
+    <div class="eval-inputs" style="margin-top:8px;">
+      <div style="width:100%;">
+        <label style="font-size:12px; color:var(--accent-gold); font-weight:bold;">Quantos gols você fez nesta partida?</label>
+        <input type="number" id="mySelfGoalsInput" class="form-control" value="0" min="0">
+      </div>
+    </div>
+  `;
+  list.appendChild(selfRow);
+
+  // Lista dos outros jogadores da partida (apenas nota de 1 a 5 estrelas)
+  const otherPlayers = players.filter(p => match.playerIds.includes(p.id) && p.id != currentUser.id);
+
+  if (otherPlayers.length > 0) {
+    const titleDiv = document.createElement('div');
+    titleDiv.style.margin = '15px 0 8px 0';
+    titleDiv.style.fontSize = '12px';
+    titleDiv.style.color = 'var(--text-muted)';
+    titleDiv.innerText = 'Avalie o desempenho dos seus companheiros:';
+    list.appendChild(titleDiv);
+
+    otherPlayers.forEach(p => {
+      const isGk = p.position === 'Goleiro';
+      const concededInput = isGk ? `
+        <div style="margin-top:6px;">
+          <label style="font-size:11px; color:var(--text-muted)">Gols Sofridos (Goleiro):</label>
+          <input type="number" class="form-control eval-conceded" data-id="${p.id}" value="0" min="0">
+        </div>
+      ` : '';
+
+      const row = document.createElement('div');
+      row.className = 'eval-row';
+      row.innerHTML = `
+        <div class="eval-row-header">
+          <img class="avatar-mini" src="${p.photo || defaultAvatar}">
+          <span>${p.name}</span>
+        </div>
+        <div class="eval-inputs">
+          <div style="width:100%;">
+            <label style="font-size:11px; color:var(--text-muted)">Nota do Jogador (1-5★):</label>
+            <select class="form-control eval-rating" data-id="${p.id}">
+              <option value="5">★ 5.0</option>
+              <option value="4">★ 4.0</option>
+              <option value="3" selected>★ 3.0</option>
+              <option value="2">★ 2.0</option>
+              <option value="1">★ 1.0</option>
+            </select>
           </div>
-        ` : '';
-
-        const row = document.createElement('div');
-        row.className = 'eval-row';
-        row.innerHTML = `
-          <div class="eval-row-header">
-            <img class="avatar-mini" src="${p.photo || defaultAvatar}">
-            <span>${p.name}</span>
-          </div>
-          <div class="eval-inputs">
-            <div>
-              <label style="font-size:11px; color:var(--text-muted)">Nota (1-5★):</label>
-              <select class="form-control eval-rating" data-id="${p.id}">
-                <option value="5">★ 5.0</option>
-                <option value="4">★ 4.0</option>
-                <option value="3" selected>★ 3.0</option>
-                <option value="2">★ 2.0</option>
-                <option value="1">★ 1.0</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:11px; color:var(--text-muted)">Gols Feitos:</label>
-              <input type="number" class="form-control eval-goals" data-id="${p.id}" value="0" min="0">
-            </div>
-          </div>
-          ${concededInput}
-        `;
-        list.appendChild(row);
-      });
-    }
+        </div>
+        ${concededInput}
+      `;
+      list.appendChild(row);
+    });
+  }
+}
 
     function saveMatchData() {
-      const ratingsInputs = document.querySelectorAll('.eval-rating');
-      const goalsInputs = document.querySelectorAll('.eval-goals');
-      const concededInputs = document.querySelectorAll('.eval-conceded');
+  if (loggedUserMatricula === '0') {
+    return alert('Visitantes não podem enviar avaliações!');
+  }
 
-      ratingsInputs.forEach(input => {
-        const targetId = input.getAttribute('data-id');
-        const ratingVal = parseFloat(input.value);
-        
-        const goalInput = Array.from(goalsInputs).find(g => g.getAttribute('data-id') === targetId);
-        const addGoals = parseInt(goalInput ? goalInput.value : 0) || 0;
+  const matchId = document.getElementById('matchSelect').value;
+  const currentUser = players.find(p => p.matricula == loggedUserMatricula);
 
-        const concededInput = Array.from(concededInputs).find(c => c.getAttribute('data-id') === targetId);
-        const addConceded = parseInt(concededInput ? concededInput.value : 0) || 0;
+  if (!matchId || !currentUser) return;
 
-        const targetPlayer = players.find(p => p.id == targetId);
-        if (targetPlayer) {
-          const updatedRatings = targetPlayer.ratings ? [...targetPlayer.ratings, ratingVal] : [ratingVal];
-          db.ref('players/' + targetId).update({
-            goals: (targetPlayer.goals || 0) + addGoals,
-            concededGoals: (targetPlayer.concededGoals || 0) + addConceded,
-            ratings: updatedRatings
-          });
-        }
+  const match = matches.find(m => m.id == matchId);
+  if (!match) return;
+
+  if (match.evaluations && match.evaluations[currentUser.id]) {
+    return alert('Você já enviou sua avaliação para esta partida!');
+  }
+
+  // 1. Salva os gols autodeclarados do próprio usuário
+  const selfGoalsInput = document.getElementById('mySelfGoalsInput');
+  const myGoals = parseInt(selfGoalsInput ? selfGoalsInput.value : 0) || 0;
+  if (myGoals > 0) {
+    db.ref('players/' + currentUser.id).update({
+      goals: (currentUser.goals || 0) + myGoals
+    });
+  }
+
+  // 2. Salva as notas dadas aos companheiros
+  const ratingsInputs = document.querySelectorAll('.eval-rating');
+  const concededInputs = document.querySelectorAll('.eval-conceded');
+
+  ratingsInputs.forEach(input => {
+    const targetId = input.getAttribute('data-id');
+    const ratingVal = parseFloat(input.value);
+
+    const concededInput = Array.from(concededInputs).find(c => c.getAttribute('data-id') === targetId);
+    const addConceded = parseInt(concededInput ? concededInput.value : 0) || 0;
+
+    const targetPlayer = players.find(p => p.id == targetId);
+    if (targetPlayer) {
+      const updatedRatings = targetPlayer.ratings ? [...targetPlayer.ratings, ratingVal] : [ratingVal];
+      db.ref('players/' + targetId).update({
+        concededGoals: (targetPlayer.concededGoals || 0) + addConceded,
+        ratings: updatedRatings
       });
+    }
+  });
+
+  // 3. Marca no Firebase que este usuário já avaliou esta partida
+  db.ref(`matches/${matchId}/evaluations/${currentUser.id}`).set(true)
+    .then(() => {
+      alert('Sua avaliação e seus gols foram salvos com sucesso!');
+      document.getElementById('matchSelect').value = '';
+      renderEvalArea();
+    });
+}
 
       alert('Sua avaliação foi enviada!');
       document.getElementById('matchSelect').value = '';
