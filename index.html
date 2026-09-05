@@ -717,45 +717,49 @@
     return alert('Por favor, digite sua matrícula.');
   }
 
-  // Acesso visitante
+  // Acesso para Visitantes
   if (val === '0') {
     loggedUserMatricula = '0';
     document.getElementById('loginModal').style.display = 'none';
-    initApp();
+    if (typeof initApp === 'function') initApp();
     return;
   }
 
+  // Validação do intervalo numérico
   const num = parseInt(val);
   if (isNaN(num) || num < 14000 || num > 30000) {
     return alert('Matrícula inválida! Digite um número entre 14000 e 30000.');
   }
 
-  // Busca no Firebase Realtime Database
+  // Força a consulta direta no Firebase Realtime Database
   db.ref('players').once('value').then(snapshot => {
     const data = snapshot.val();
-    let found = false;
+    let userFound = false;
 
     if (data) {
       Object.keys(data).forEach(key => {
         if (data[key].matricula == val) {
-          found = true;
+          userFound = true;
         }
       });
     }
 
-    if (found) {
+    if (userFound) {
       loggedUserMatricula = val;
       document.getElementById('loginModal').style.display = 'none';
-      initApp();
+      
+      // Carrega os dados da aplicação
+      if (typeof fetchPlayers === 'function') fetchPlayers();
+      if (typeof fetchMatches === 'function') fetchMatches();
+      if (typeof initApp === 'function') initApp();
     } else {
-      alert('Matrícula não encontrada no sistema. Cadastre-se ou verifique o número.');
+      alert('Matrícula não encontrada no sistema. Verifique o número digitado.');
     }
   }).catch(err => {
-    console.error('Erro ao conectar com Firebase:', err);
-    alert('Erro ao validar matrícula. Verifique sua conexão com o banco.');
+    console.error('Erro ao conectar com o banco:', err);
+    alert('Erro ao validar matrícula. Verifique a conexão com o Firebase.');
   });
 }
-
     function logout() {
       localStorage.removeItem('fut_user_matricula');
       loggedUserMatricula = null;
