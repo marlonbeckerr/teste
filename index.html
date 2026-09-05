@@ -722,9 +722,19 @@ function checkMatriculaStatus() {
   }
 
   // Acesso para Visitantes
+  function loginWithMatricula() {
+  // Busca o campo de entrada correto (aceita loginMatricula ou loginMatriculaInput)
+  const input = document.getElementById('loginMatricula') || document.getElementById('loginMatriculaInput');
+  const val = input ? input.value.trim() : '';
+
+  if (!val) {
+    return alert('Por favor, digite sua matrícula.');
+  }
+
+  // Acesso para Visitantes
   if (val === '0') {
     loggedUserMatricula = '0';
-    document.getElementById('loginModal').style.display = 'none';
+    closeLoginModal();
     if (typeof initApp === 'function') initApp();
     return;
   }
@@ -735,7 +745,7 @@ function checkMatriculaStatus() {
     return alert('Matrícula inválida! Digite um número entre 14000 e 30000.');
   }
 
-  // Força a consulta direta no Firebase Realtime Database
+  // Consulta no Firebase Realtime Database
   db.ref('players').once('value').then(snapshot => {
     const data = snapshot.val();
     let userFound = false;
@@ -750,9 +760,9 @@ function checkMatriculaStatus() {
 
     if (userFound) {
       loggedUserMatricula = val;
-      document.getElementById('loginModal').style.display = 'none';
-      
-      // Carrega os dados da aplicação
+      localStorage.setItem('fut_user_matricula', val);
+      closeLoginModal();
+
       if (typeof fetchPlayers === 'function') fetchPlayers();
       if (typeof fetchMatches === 'function') fetchMatches();
       if (typeof initApp === 'function') initApp();
@@ -764,117 +774,33 @@ function checkMatriculaStatus() {
     alert('Erro ao validar matrícula. Verifique a conexão com o Firebase.');
   });
 }
-    function logout() {
-      localStorage.removeItem('fut_user_matricula');
-      loggedUserMatricula = null;
-      document.getElementById('loginMatricula').value = '';
-      document.getElementById('firstAccessGroup').style.display = 'none';
-      document.getElementById('loginOverlay').style.display = 'flex';
-    }
 
-    function calcAvg(ratings) {
-      if(!ratings || ratings.length === 0) return 3.0;
-      const sum = ratings.reduce((a, b) => a + b, 0);
-      return parseFloat((sum / ratings.length).toFixed(1));
-    }
+// Função auxilar para garantir que qualquer overlay/modal de login seja fechado
+function closeLoginModal() {
+  const modal = document.getElementById('loginModal');
+  const overlay = document.getElementById('loginOverlay');
+  if (modal) modal.style.display = 'none';
+  if (overlay) overlay.style.display = 'none';
+}
 
-    /* REGRAS DE CONQUISTA DE TÍTULOS */
-    function getEarnedTitles(player) {
-      if (!player) return [];
-      const earned = ['bem_vindo'];
+function checkMatriculaStatus() {
+  const input = document.getElementById('loginMatricula') || document.getElementById('loginMatriculaInput');
+  if (!input) return;
+}
 
-      const matchesCount = player.matches || 0;
-      const goalsCount = player.goals || 0;
-      const conceded = player.concededGoals || 0;
-      const pos = player.position || '';
-      const avgRating = calcAvg(player.ratings);
+function logout() {
+  localStorage.removeItem('fut_user_matricula');
+  loggedUserMatricula = null;
+  
+  const input = document.getElementById('loginMatricula') || document.getElementById('loginMatriculaInput');
+  if (input) input.value = '';
 
-      const totalMatchesInSystem = matches.length || 0;
-      if (totalMatchesInSystem >= 1 && matchesCount < totalMatchesInSystem) {
-        earned.push('home_office');
-      }
+  const firstAccess = document.getElementById('firstAccessGroup');
+  if (firstAccess) firstAccess.style.display = 'none';
 
-      if (player.ratings && player.ratings.length > 0) {
-        const has67 = player.ratings.includes(6.7) || avgRating === 6.7;
-        const hasSix = player.ratings.some(r => r >= 6 && r < 7) || (avgRating >= 6.0 && avgRating < 7.0);
-        if (has67 || hasSix) {
-          earned.push('six_seven');
-        }
-      }
-
-      if (pos === 'Goleiro' && matchesCount >= 5) {
-        const gkPlayers = players.filter(p => p.position === 'Goleiro' && (p.matches || 0) >= 5);
-        if (gkPlayers.length > 0) {
-          const minConceded = Math.min(...gkPlayers.map(p => p.concededGoals || 0));
-          const maxConceded = Math.max(...gkPlayers.map(p => p.concededGoals || 0));
-          if (conceded === minConceded) earned.push('paredao');
-          if (conceded === maxConceded) earned.push('mao_alface');
-        }
-      }
-
-      if (goalsCount === 1) earned.push('artilheiro_acidental');
-      if (goalsCount === 3) earned.push('hat_trick');
-      if (goalsCount === 10) earned.push('fominha');
-      if (goalsCount >= 20) earned.push('goat');
-
-      if (matchesCount > 0) {
-        const allMatches = players.map(p => p.matches || 0);
-        const maxMatches = Math.max(...allMatches);
-        if (matchesCount === maxMatches) earned.push('compliance');
-      }
-
-      if (matchesCount > 0 && pos !== 'Goleiro') {
-        const linePlayers = players.filter(p => p.position !== 'Goleiro' && (p.matches || 0) > 0);
-        if (linePlayers.length > 0) {
-          const sortedBateFofo = [...linePlayers].sort((a, b) => {
-            if ((b.matches || 0) !== (a.matches || 0)) return (b.matches || 0) - (a.matches || 0);
-            return (a.goals || 0) - (b.goals || 0);
-          });
-          if (sortedBateFofo[0].id === player.id) earned.push('bate_fofo');
-        }
-      }
-
-      if (player.ratings && player.ratings.length > 0 && avgRating < 2.5) {
-        earned.push('oee_baixo');
-      }
-
-      return earned;
-    }
-
-    const titleLabels = {
-      'bem_vindo': '🟢 Bem vindo ao clube',
-      'paredao': '🧤 Paredão',
-      'mao_alface': '🥬 Mão de alface',
-      'bate_fofo': '👟 Bate fofo',
-      'artilheiro_acidental': '🎯 Artilheiro acidental',
-      'hat_trick': '🎩 Hat-trick',
-      'six_seven': '🎲 Six Seven',
-      'fominha': '⚽ Fominha',
-      'goat': '👑 GOAT',
-      'home_office': '💻 Home office',
-      'compliance': '📋 Aprovado pelo compliance',
-      'oee_baixo': '⚠️ OEE baixo'
-    };
-
-    /* SISTEMA DE NOTIFICAÇÃO DE TÍTULOS */
-    function checkTitleNotifications(user) {
-      if (!user) return;
-
-      const currentTitles = getEarnedTitles(user);
-      const storageKey = `seen_titles_${user.matricula}`;
-      const seenTitles = JSON.parse(localStorage.getItem(storageKey) || '[]');
-
-      const newTitles = currentTitles.filter(t => !seenTitles.includes(t));
-
-      if (newTitles.length > 0) {
-        newTitles.forEach(tKey => {
-          const titleName = titleLabels[tKey] || tKey;
-          addNotificationToUI(`🎉 Você conquistou o título <strong>"${titleName}"</strong>!`);
-          showToast(`🏆 Novo Título!`, `Você desbloqueou "${titleName}"`);
-        });
-
-        localStorage.setItem(storageKey, JSON.stringify(currentTitles));
-      }
+  const overlay = document.getElementById('loginOverlay') || document.getElementById('loginModal');
+  if (overlay) overlay.style.display = 'flex';
+}
     }
 
     let unreadCount = 0;
