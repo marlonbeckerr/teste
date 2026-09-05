@@ -713,17 +713,17 @@ function checkMatriculaStatus() {
   const input = document.getElementById('loginMatriculaInput');
   if (!input) return;
 }
-    function loginWithMatricula() {
-  const input = document.getElementById('loginMatriculaInput');
-  const val = input ? input.value.trim() : '';
+    // 1. Função que o HTML chama quando você digita no input (oninput)
+function checkMatriculaStatus() {
+  const input = document.getElementById('loginMatricula') || document.getElementById('loginMatriculaInput');
+  if (!input) return;
+  // Limpa letras e deixa só números
+  input.value = input.value.replace(/\D/g, '').slice(0, 5);
+}
 
-  if (!val) {
-    return alert('Por favor, digite sua matrícula.');
-  }
-
-  // Acesso para Visitantes
-  function loginWithMatricula() {
-  // Busca o campo de entrada correto (aceita loginMatricula ou loginMatriculaInput)
+// 2. Função principal de Login
+function loginWithMatricula() {
+  // Pega o input com o nome antigo ou o novo
   const input = document.getElementById('loginMatricula') || document.getElementById('loginMatriculaInput');
   const val = input ? input.value.trim() : '';
 
@@ -731,28 +731,32 @@ function checkMatriculaStatus() {
     return alert('Por favor, digite sua matrícula.');
   }
 
-  // Acesso para Visitantes
+  // Acesso Visitante
   if (val === '0') {
     loggedUserMatricula = '0';
-    closeLoginModal();
+    esconderTelasDeLogin();
     if (typeof initApp === 'function') initApp();
     return;
   }
 
-  // Validação do intervalo numérico
+  // Validação do intervalo
   const num = parseInt(val);
   if (isNaN(num) || num < 14000 || num > 30000) {
     return alert('Matrícula inválida! Digite um número entre 14000 e 30000.');
   }
 
   // Consulta no Firebase Realtime Database
+  if (typeof db === 'undefined' || !db) {
+    return alert('Erro: Conexão com o Firebase não foi inicializada no HTML.');
+  }
+
   db.ref('players').once('value').then(snapshot => {
     const data = snapshot.val();
     let userFound = false;
 
     if (data) {
       Object.keys(data).forEach(key => {
-        if (data[key].matricula == val) {
+        if (data[key] && data[key].matricula == val) {
           userFound = true;
         }
       });
@@ -761,7 +765,8 @@ function checkMatriculaStatus() {
     if (userFound) {
       loggedUserMatricula = val;
       localStorage.setItem('fut_user_matricula', val);
-      closeLoginModal();
+      
+      esconderTelasDeLogin();
 
       if (typeof fetchPlayers === 'function') fetchPlayers();
       if (typeof fetchMatches === 'function') fetchMatches();
@@ -775,19 +780,15 @@ function checkMatriculaStatus() {
   });
 }
 
-// Função auxilar para garantir que qualquer overlay/modal de login seja fechado
-function closeLoginModal() {
-  const modal = document.getElementById('loginModal');
-  const overlay = document.getElementById('loginOverlay');
-  if (modal) modal.style.display = 'none';
-  if (overlay) overlay.style.display = 'none';
+// 3. Função auxiliar para sumir com o modal/overlay de login não importa o nome que ele tenha no HTML
+function esconderTelasDeLogin() {
+  ['loginModal', 'loginOverlay', 'modalLogin'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
 }
 
-function checkMatriculaStatus() {
-  const input = document.getElementById('loginMatricula') || document.getElementById('loginMatriculaInput');
-  if (!input) return;
-}
-
+// 4. Logout correto
 function logout() {
   localStorage.removeItem('fut_user_matricula');
   loggedUserMatricula = null;
@@ -801,26 +802,6 @@ function logout() {
   const overlay = document.getElementById('loginOverlay') || document.getElementById('loginModal');
   if (overlay) overlay.style.display = 'flex';
 }
-    }
-
-    let unreadCount = 0;
-    function addNotificationToUI(messageHTML) {
-      const list = document.getElementById('notifList');
-      const badge = document.getElementById('notifBadge');
-
-      if (unreadCount === 0 && list.children[0] && list.children[0].innerText.includes('Nenhuma notification')) {
-        list.innerHTML = '';
-      }
-
-      const item = document.createElement('div');
-      item.className = 'notification-item';
-      item.innerHTML = messageHTML;
-      list.prepend(item);
-
-      unreadCount++;
-      badge.innerText = unreadCount;
-      badge.style.display = 'flex';
-    }
 
     function toggleNotifications() {
       const dropdown = document.getElementById('notifDropdown');
