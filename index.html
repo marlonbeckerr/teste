@@ -708,7 +708,11 @@
         btn.innerText = `Entrar como ${existingUser.name}`;
       }
     }
-
+function checkMatriculaStatus() {
+  // Função auxiliar para evitar erro de execução no evento oninput
+  const input = document.getElementById('loginMatriculaInput');
+  if (!input) return;
+}
     function loginWithMatricula() {
   const input = document.getElementById('loginMatriculaInput');
   const val = input ? input.value.trim() : '';
