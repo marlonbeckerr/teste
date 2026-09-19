@@ -33,7 +33,7 @@
     .login-card p { color: var(--text-muted); font-size: 13px; margin-bottom: 20px; }
 
     header { width: 100%; background-color: var(--card-bg); border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-    nav { max-width: 650px; margin: 0 auto; display: flex; justify-content: space-around; overflow-x: auto; }
+    nav { max-width: 650px; margin: 0 auto; display: flex; justify-space-around; overflow-x: auto; }
     .nav-btn { flex: 1; min-width: 75px; padding: 14px 2px; background: none; border: none; color: var(--text-muted); font-size: 11px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; text-transform: uppercase; white-space: nowrap; }
     .nav-btn.active { color: var(--accent-gold); border-bottom-color: var(--accent-gold); }
     .container { width: 100%; max-width: 600px; padding: 20px; }
@@ -99,245 +99,50 @@
     .bench-box { background-color: var(--card-bg); border-radius: 12px; padding: 15px; border: 1px dashed var(--text-muted); margin-top: 15px; }
     .gk-badge { font-size: 10px; background-color: var(--accent-gold); color: #000; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: 800; }
     
-    /* MODAL PERFIL DE TERCEIROS */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-card { background-color: var(--card-bg); border: 2px solid var(--accent-gold); border-radius: 16px; padding: 24px; width: 100%; max-width: 400px; text-align: center; position: relative; }
     .modal-close { position: absolute; top: 10px; right: 14px; background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; font-weight: bold; }
 
-    /* ESTILOS DA ABA DESTAQUE */
     .mvp-card-glow {
-      position: relative;
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      border: 3px solid var(--accent-gold);
-      border-radius: 20px;
-      padding: 25px;
-      text-align: center;
-      margin-bottom: 25px;
-      box-shadow: 0 0 25px rgba(245, 158, 11, 0.35);
-      overflow: hidden;
+      position: relative; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 3px solid var(--accent-gold); border-radius: 20px; padding: 25px;
+      text-align: center; margin-bottom: 25px; box-shadow: 0 0 25px rgba(245, 158, 11, 0.35); overflow: hidden;
     }
     .mvp-card-glow::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
+      content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
       background: linear-gradient(45deg, transparent, rgba(245, 158, 11, 0.15), transparent);
-      transform: rotate(45deg);
-      animation: shine 4s infinite linear;
+      transform: rotate(45deg); animation: shine 4s infinite linear;
     }
-    @keyframes shine {
-      0% { transform: translateY(-100%) rotate(45deg); }
-      100% { transform: translateY(100%) rotate(45deg); }
-    }
-    .mvp-badge {
-      display: inline-block;
-      background: linear-gradient(90deg, #f59e0b, #d97706);
-      color: #000;
-      font-weight: 900;
-      font-size: 12px;
-      padding: 6px 16px;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-    .mvp-avatar {
-      width: 110px;
-      height: 110px;
-      border-radius: 50%;
-      border: 4px solid var(--accent-gold);
-      object-fit: cover;
-      margin: 10px auto;
-      box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
-    }
+    @keyframes shine { 0% { transform: translateY(-100%) rotate(45deg); } 100% { transform: translateY(100%) rotate(45deg); } }
+    .mvp-badge { display: inline-block; background: linear-gradient(90deg, #f59e0b, #d97706); color: #000; font-weight: 900; font-size: 12px; padding: 6px 16px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    .mvp-avatar { width: 110px; height: 110px; border-radius: 50%; border: 4px solid var(--accent-gold); object-fit: cover; margin: 10px auto; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); }
     .mvp-name { font-size: 24px; font-weight: 900; text-transform: uppercase; color: #fff; margin-top: 5px; }
     .mvp-score { font-size: 32px; font-weight: 900; color: var(--accent-gold); text-shadow: 0 2px 8px rgba(0,0,0,0.5); margin-top: 2px; }
 
-    /* CAMPO DE FUTEBOL TÁTICO */
     .pitch-container {
-      background-color: #15803d;
-      background-image: repeating-linear-gradient(0deg, #15803d, #15803d 30px, #166534 30px, #166534 60px);
-      border: 3px solid #ffffff;
-      border-radius: 16px;
-      padding: 20px 10px;
-      position: relative;
-      min-height: 480px;
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-around;
-      align-content: space-around;
-      gap: 15px;
-      overflow: hidden;
+      background-color: #15803d; background-image: repeating-linear-gradient(0deg, #15803d, #15803d 30px, #166534 30px, #166534 60px);
+      border: 3px solid #ffffff; border-radius: 16px; padding: 20px 10px; position: relative; min-height: 480px;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.5); display: flex; flex-wrap: wrap; justify-content: space-around; align-content: space-around; gap: 15px; overflow: hidden;
     }
-    .pitch-container::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background-color: rgba(255,255,255,0.4);
-      transform: translateY(-50%);
-    }
-    .pitch-container::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 90px;
-      height: 90px;
-      border: 2px solid rgba(255,255,255,0.4);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-    }
-    .pitch-player {
-      position: relative;
-      z-index: 2;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 80px;
-    }
-    .pitch-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 2px solid #ffffff;
-      object-fit: cover;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-      background-color: #0f172a;
-    }
-    .pitch-name {
-      background: rgba(15, 23, 42, 0.85);
-      color: #fff;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 6px;
-      margin-top: 4px;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 85px;
-    }
-    .pitch-score {
-      background: var(--accent-gold);
-      color: #000;
-      font-size: 10px;
-      font-weight: 900;
-      padding: 1px 5px;
-      border-radius: 4px;
-      margin-top: 2px;
-    }
+    .pitch-container::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background-color: rgba(255,255,255,0.4); transform: translateY(-50%); }
+    .pitch-container::after { content: ''; position: absolute; top: 50%; left: 50%; width: 90px; height: 90px; border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; transform: translate(-50%, -50%); }
+    .pitch-player { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; width: 80px; }
+    .pitch-avatar { width: 48px; height: 48px; border-radius: 50%; border: 2px solid #ffffff; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.4); background-color: #0f172a; }
+    .pitch-name { background: rgba(15, 23, 42, 0.85); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px; margin-top: 4px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85px; }
+    .pitch-score { background: var(--accent-gold); color: #000; font-size: 10px; font-weight: 900; padding: 1px 5px; border-radius: 4px; margin-top: 2px; }
 
-    /* ESTILOS DE NOTIFICAÇÃO E POPUPS */
-    .notification-wrapper {
-      position: relative;
-      display: inline-block;
-    }
-    .notification-btn {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      color: var(--accent-gold);
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 18px;
-      position: relative;
-      transition: background 0.2s;
-    }
-    .notification-btn:hover {
-      background: #334155;
-    }
-    .notification-badge {
-      position: absolute;
-      top: -2px;
-      right: -2px;
-      background-color: var(--team2-color);
-      color: white;
-      font-size: 10px;
-      font-weight: 800;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px solid var(--bg-color);
-    }
-    .notification-dropdown {
-      position: absolute;
-      top: 46px;
-      right: 0;
-      width: 280px;
-      background-color: var(--card-bg);
-      border: 2px solid var(--accent-gold);
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      z-index: 500;
-      display: none;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    .notification-dropdown-header {
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--border-color);
-      font-weight: 700;
-      font-size: 12px;
-      color: var(--accent-gold);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .notification-item {
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--border-color);
-      font-size: 12px;
-      color: var(--text-main);
-      line-height: 1.4;
-    }
-    .notification-item:last-child {
-      border-bottom: none;
-    }
+    .notification-wrapper { position: relative; display: inline-block; }
+    .notification-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--accent-gold); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; position: relative; transition: background 0.2s; }
+    .notification-btn:hover { background: #334155; }
+    .notification-badge { position: absolute; top: -2px; right: -2px; background-color: var(--team2-color); color: white; font-size: 10px; font-weight: 800; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-color); }
+    .notification-dropdown { position: absolute; top: 46px; right: 0; width: 280px; background-color: var(--card-bg); border: 2px solid var(--accent-gold); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 500; display: none; max-height: 300px; overflow-y: auto; }
+    .notification-dropdown-header { padding: 10px 14px; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 12px; color: var(--accent-gold); display: flex; justify-content: space-between; align-items: center; }
+    .notification-item { padding: 10px 14px; border-bottom: 1px solid var(--border-color); font-size: 12px; color: var(--text-main); line-height: 1.4; }
+    .notification-item:last-child { border-bottom: none; }
 
-    /* TOAST DE POPUP NA TELA */
-    #toastContainer {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 3000;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      pointer-events: none;
-    }
-    .toast-popup {
-      background-color: var(--card-bg);
-      border: 2px solid var(--accent-gold);
-      color: var(--text-main);
-      padding: 12px 18px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 260px;
-      animation: slideIn 0.4s ease-out forwards;
-      pointer-events: auto;
-    }
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
+    #toastContainer { position: fixed; bottom: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    .toast-popup { background-color: var(--card-bg); border: 2px solid var(--accent-gold); color: var(--text-main); padding: 12px 18px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 12px; min-width: 260px; animation: slideIn 0.4s ease-out forwards; pointer-events: auto; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
   </style>
 </head>
 <body>
@@ -363,7 +168,6 @@
     </div>
   </div>
 
-  <!-- MODAL VISITANTE -->
   <div id="profileModal" class="modal-overlay">
     <div class="modal-card">
       <button class="modal-close" onclick="closeModal()">✕</button>
@@ -426,7 +230,7 @@
       </div>
     </div>
 
-    <!-- ABA 1: RANKING -->
+    <!-- RANKING -->
     <div id="tab-ranking" class="tab-content active">
       <div class="section-title">⚽ Classificação Geral</div>
       <div class="table-container">
@@ -446,7 +250,7 @@
       </div>
     </div>
 
-    <!-- ABA DESTAQUE DA ÚLTIMA PARTIDA -->
+    <!-- DESTAQUE -->
     <div id="tab-destaque" class="tab-content">
       <div id="destaqueContent">
         <div id="emptyMatchDestaqueMsg" class="empty-msg">Nenhuma partida realizada ainda.</div>
@@ -469,11 +273,11 @@
       </div>
     </div>
 
-    <!-- ABA 3: MEU PERFIL -->
+    <!-- MEU PERFIL -->
     <div id="tab-meu-perfil" class="tab-content">
       <div class="section-title">👤 Meu Perfil</div>
       <div class="simple-profile-card">
-        <img id="myPhoto" class="profile-avatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'></path><circle cx='12' cy='7' r='4'></circle></svg>">
+        <img id="myPhoto" class="profile-avatar" src="">
         <div class="profile-name" id="myName">---</div>
         <div class="profile-matricula" id="myMatricula">Matrícula: ---</div>
         <div id="myTitleBadge" class="profile-title-badge" style="display:none;">---</div>
@@ -520,41 +324,36 @@
       </div>
     </div>
 
-    <!-- ABA 4: SORTEIO DE TIMES -->
+    <!-- SORTEIO -->
     <div id="tab-sorteio-times" class="tab-content">
       <div class="section-title">🎲 Sorteio de Times</div>
       <div class="form-card">
-        
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
           <div class="form-group" style="margin-bottom:0;">
             <label style="color: var(--team1-color);">🧤 Goleiro Time 1:</label>
-            <select id="gk1Select" class="form-control">
-              <option value="">Sem goleiro fixo</option>
-            </select>
+            <select id="gk1Select" class="form-control"><option value="">Sem goleiro fixo</option></select>
           </div>
           <div class="form-group" style="margin-bottom:0;">
             <label style="color: var(--team2-color);">🧤 Goleiro Time 2:</label>
-            <select id="gk2Select" class="form-control">
-              <option value="">Sem goleiro fixo</option>
-            </select>
+            <select id="gk2Select" class="form-control"><option value="">Sem goleiro fixo</option></select>
           </div>
         </div>
 
         <div class="form-group">
-          <label>Jogadores de LINHA Presentes (Marque os que vão pro sorteio):</label>
+          <label>Jogadores de LINHA Presentes:</label>
           <div id="drawPlayersCheckboxList" class="checkbox-grid"></div>
         </div>
 
         <div class="form-group">
           <label>Tipo de Sorteio:</label>
           <select id="drawModeSelect" class="form-control">
-            <option value="balanced">⚖️ Equilibrado (Pelas notas do Ranking)</option>
-            <option value="random">🎲 Aleatório (Sorteio total)</option>
+            <option value="balanced">⚖️ Equilibrado (Pelas notas)</option>
+            <option value="random">🎲 Aleatório</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>Jogadores de Campo por Time (ex: 5 para Society, 6 para Campo):</label>
+          <label>Jogadores por Time:</label>
           <input type="number" id="playersPerTeamInput" class="form-control" value="5" min="2" max="11">
         </div>
 
@@ -576,13 +375,13 @@
         </div>
 
         <div id="benchArea" class="bench-box" style="display: none;">
-          <div style="font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;">⏳ Reservas / Próximo Jogo:</div>
+          <div style="font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;">⏳ Reservas:</div>
           <ul class="team-list" id="benchList"></ul>
         </div>
       </div>
     </div>
 
-    <!-- ABA 5: CRIAR PARTIDA -->
+    <!-- CRIAR PARTIDA -->
     <div id="tab-criar-partida" class="tab-content">
       <div class="section-title">➕ Criar Nova Partida</div>
       <div class="form-card">
@@ -591,18 +390,18 @@
           <input type="date" id="matchDateInput" class="form-control">
         </div>
         <div class="form-group">
-          <label>Onde foi o Jogo? (Local):</label>
-          <input type="text" id="matchLocationInput" class="form-control" placeholder="Ex: Arena 10 / Society do Trampo">
+          <label>Local:</label>
+          <input type="text" id="matchLocationInput" class="form-control" placeholder="Ex: Arena 10">
         </div>
         <div class="form-group">
-          <label>Quem jogou no dia? (Marque os presentes):</label>
+          <label>Quem jogou no dia?:</label>
           <div id="playersCheckboxList" class="checkbox-grid"></div>
         </div>
         <button class="btn-submit" onclick="createNewMatch()">Criar Partida</button>
       </div>
     </div>
 
-    <!-- ABA 6: AVALIAR PARTIDA -->
+    <!-- AVALIAR PARTIDA -->
     <div id="tab-avaliar-partida" class="tab-content">
       <div class="section-title">⚽ Avaliar Partida</div>
       <div class="form-card">
@@ -939,6 +738,7 @@
       document.getElementById('gk2Select').innerHTML = options;
     }
 
+    /* CORREÇÃO 1: Soma a partida aos participantes APENAS na criação da partida */
     function createNewMatch() {
       const date = document.getElementById('matchDateInput').value;
       const location = document.getElementById('matchLocationInput').value;
@@ -955,6 +755,16 @@
       };
 
       db.ref('matches').push(newMatch).then(() => {
+        // Incrementa +1 partida para cada jogador que participou do jogo
+        selected.forEach(pId => {
+          const targetPlayer = players.find(p => p.id === pId);
+          if (targetPlayer) {
+            db.ref(`players/${pId}`).update({
+              matches: (targetPlayer.matches || 0) + 1
+            });
+          }
+        });
+
         alert('Partida criada com sucesso!');
         switchTab('avaliar-partida');
       });
@@ -1019,6 +829,7 @@
       area.style.display = 'block';
     }
 
+    /* CORREÇÃO 2: Removida a soma de partidas adicionais durante a avaliação e incluída a checagem de títulos */
     function saveMatchData() {
       const matchId = document.getElementById('matchSelect').value;
       if (!matchId) return;
@@ -1033,12 +844,14 @@
 
       const goalsInput = document.querySelector(`.eval-goals-input[data-player="${currentUser.id}"]`);
       const myGoalsInMatch = goalsInput ? parseInt(goalsInput.value) || 0 : 0;
+      const updatedGoals = (currentUser.goals || 0) + myGoalsInMatch;
 
+      // Atualiza apenas os gols do usuário logado nesta avaliação (sem somar partida)
       db.ref(`players/${currentUser.id}`).update({
-        goals: (currentUser.goals || 0) + myGoalsInMatch,
-        matches: (currentUser.matches || 0) + 1
+        goals: updatedGoals
       });
 
+      // Atualiza as notas dos outros jogadores
       const ratingSelects = document.querySelectorAll('.eval-rating-select');
       ratingSelects.forEach(select => {
         const targetId = select.dataset.player;
@@ -1049,28 +862,29 @@
           const currentRatings = targetPlayer.ratings || [];
           currentRatings.push(ratingVal);
           db.ref(`players/${targetId}`).update({
-            ratings: currentRatings,
-            matches: (targetPlayer.matches || 0) + 1
+            ratings: currentRatings
           });
         }
       });
 
+      // Marca que a partida foi avaliada por este usuário
       db.ref(`matches/${matchId}/evaluations/${currentUser.id}`).set(true).then(() => {
-        alert('Notas enviadas com sucesso!');
+        alert('Notas e gols enviados com sucesso!');
         document.getElementById('evalListArea').style.display = 'none';
+
+        // Atualiza a referência do objeto local e testa títulos conquistados
+        currentUser.goals = updatedGoals;
+        checkTitleNotifications(currentUser);
       });
     }
 
-    /* BOTAO PARA ZERAR TODOS OS DADOS DA RODADA */
     function resetAllData() {
       const confirmation = confirm("Tem certeza de que deseja ZERAR todos os dados da rodada?\n\nIsso apagará todas as partidas e resetará os gols, partidas e notas de TODOS os jogadores.");
       
       if (!confirmation) return;
 
-      // Reset de partidas
       db.ref('matches').remove();
 
-      // Reset de estatísticas de cada jogador
       players.forEach(p => {
         db.ref(`players/${p.id}`).update({
           goals: 0,
@@ -1181,19 +995,19 @@
       `).join('');
     }
 
+    /* SISTEMA DE TÍTULOS E CONQUISTAS */
     function getEarnedTitles(player) {
       if (!player) return [];
       const earned = ['bem_vindo'];
 
-      const matchesCount = player.matches || 0;
       const goalsCount = player.goals || 0;
       const avgRating = calcAvg(player.ratings);
 
-      if (goalsCount === 1) earned.push('artilheiro_acidental');
-      if (goalsCount === 3) earned.push('hat_trick');
+      if (goalsCount >= 1) earned.push('artilheiro_acidental');
+      if (goalsCount >= 3) earned.push('hat_trick');
       if (goalsCount >= 10) earned.push('fominha');
       if (goalsCount >= 20) earned.push('goat');
-      if (avgRating >= 4.5) earned.push('compliance');
+      if (avgRating >= 4.5 && (player.ratings || []).length >= 1) earned.push('compliance');
 
       return earned;
     }
